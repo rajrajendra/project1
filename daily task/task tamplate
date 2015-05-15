@@ -1,0 +1,65 @@
+*MORNING Daily Tasks - 05/12/2015*
+
+*1. CDE Org File*
+{code}
+
+{code}
+
+*2. Inactive Students*
+{code}
+
+{code}
+
+*3. CTS Orgs*
+{code}
+
+*Counts*
+
+{code}
+
+*4. CTS Students*
+{code}
+
+*Counts*
+
+{code}
+
+{color:red}Set CTS epoch/date to last run date at 00:00
+
+{color}
+
+*5. IMS Students*
+{code}
+
+*Counts*
+
+{code}
+
+{color:red}Set/verify AIR epoch/date (date set to previous run)
+
+{color}
+
+*6. CALPADS Student DIFF UTF8 Conversion*
+
+*7. AIR Org*
+{code}
+Runs early in the morning
+*Counts*
+
+{code}
+
+
+
+*EVENING Daily Tasks - 05/12/2015*
+
+*1. Student Enrollment*
+{code}
+Runs at 5pm CST
+{code}
+
+*2. AIR Diff*
+{code}
+Runs after Student Enrollment
+*Counts*
+
+{code}

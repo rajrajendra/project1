@@ -1,0 +1,78 @@
+Daily Tasks
+	MORNING
+	1.	Check if jobs completed: OrgImportProcess
+		CDE Org File to ETS > Post to ETS Tumbleweed
+			FmHost: bat01:/var/lib/tomcat6/remote/orgUpload
+			source /projects/devops/.sftpTW
+			Path: /projects/devops/studentExportAIR/send.py /CAASPP/CALPADS_Org_Files $SFTP_FILE
+
+		Inactive Students > Run the script
+			/projects/devops/studentExportAIR/chkjobname.sh OrgImportProcess
+			/projects/devops/studentExportAIR/chkjobname.sh CDEStudentProcess
+			
+			(run as tomcat)
+			cd /projects/devops/CDEMonitorScripts
+			./check_stale_students.sh
+			rm stale_student_list.txt
+			ln -s stat_student_list_[date] stale_student_list.txt
+			./stalestudents.sh
+			
+		CTS Orgs > Post to ETS Tumbleweed
+			FmHost: bat01:/var/lib/tomcat6/remote/orgExportCTS
+			source /projects/devops/.sftpTW
+			Path: /projects/devops/studentExportAIR/send.py /TOMS-SBACK12/Institution $SFTP_FILE
+			Counts: /projects/devops/studentExportAIR/countit.sh $FILEDATE
+
+		CTS Students > Validation & Post to ETS Tumbleweed
+			
+			run /projects/devops/studentExportAIR/ctsValidation.sh $FILEDATE
+
+			FmHost: bat01:/var/lib/tomcat6/remote/studentExportCTS
+			source /projects/devops/.sftpTW
+			SFTP: /projects/devops/studentExportAIR/send.py /TOMS-SBACK12/Registration $SFTP_FILE
+			Counts: /projects/devops/studentExportAIR/countit.sh $FILEDATE
+			
+		CTS Students > reset date value (on Monday set it to previous Friday)
+			/projects/devops/studentExportAIR/CTS_epoch.sh $DATE (ie 2015-12-30)
+
+		IMS Student > Post to ETS Tumbleweed
+			FmHost: bat01:/var/lib/tomcat6/remote/studentExportIMS
+			source /projects/devops/.sftpTW
+			SFTP: /projects/devops/studentExportAIR/send.py /TOMS-IMS/TOMS_to_IMS/CAASPP $SFTP_FILE
+			
+		AIR Student Diff > Verify epoch
+		
+		CALPADS Student Diff UTF8 Conversion
+			latin1_to_utf8.txt
+
+		AIR Org (page 11)
+			/var/lib/tomcat6/remote/orgExportAIR
+			source /projects/devops/.airorg
+			SFTP: /projects/devops/studentExportAIR/send.py /Institutions $SFTP_FILE
+			Counts: /projects/devops/studentExportAIR/countit.sh $FILEDATE
+				
+	EVENING
+		Enrollment > kick off via TOMS Trigger
+		AIR Student DIFF > kick off via TOMS Trigger
+		Student Roster > kick off via TOMS Trigger
+		CTS Student > kick off via TOMS Trigger
+		+
+		AIR Student DIFF > Process File and post to AIR SFTP
+			/var/lib/tomcat6/remote/studentExportAIR
+			
+			run script: airStuPostProc.sh $CURRENT_DATE (ie 04242015)
+			
+			MORE post-processing (ref CAASPP-2158) /var/lib/tomcat6/remote/studentExportAIR/work
+			
+				#python filter.py CA_StudentExtract_05052015_191223.csv uni_list.txt
+
+				/var/lib/tomcat6/remote/studentExportAIR/work/shah.sh
+				.sftpTW:"/CAASPP/Datafeeds/AIR Student Diff"
+				
+				sftp FILE_A.csv (129 students)
+				sftp FILE.csv (Full - 129 students)
+			
+			source /projects/devops/.airstu
+			SFTP: /projects/devops/studentExportAIR/send.py /Public/TIDE/CA/ETS/Dataexchange/Incoming/StudentDemographics/ $SFTP_FILE
+			SFTP: /projects/devops/studentExportAIR/send.py /Public/TIDE/CA/ETS/Dataexchange/Incoming/StudentAccommodations/ $SFTP_FILE
+			Counts from display and from file in /tmp

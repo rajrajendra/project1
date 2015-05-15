@@ -1,0 +1,20 @@
+# Check files in archive & exception
+cd /var/lib/tomcat6/remote/studentUpload/archive
+cd /var/lib/tomcat6/remote/studentUpload/exception
+
+#Process to repeat for each directory if needed
+####sed -e "s/\x92/\'/g" Diff_CA_students_20150501.csv > Diff_CA_students_20150501.csv.latin1
+
+python /projects/devops/utf8-check/checklatin_new.py Diff_CA_students_20150501.csv Diff_CA_students_20150501.csv.utf8
+#
+
+#combine files into Reprocess.utf8.csv
+
+iconv -f latin1 -t utf8 -c Diff_CA_students_2015MMDD.csv.utf8 > ../Reprocess_2015MMDD.utf8.csv
+
+# in db
+
+#NOTICE: change date and EndLineNumber (5)
+update jobs.job_pool set status='READY',job_start_time=now(),job_attributes='{"fileName":"Reprocess_2015MMDD.utf8.csv","StartLineNumber":"0","EndLineNumber":"$NUMBEROFSTUDENTS"}' where job_pool_id=54737;
+select * from jobs.job_pool where job_pool_id = 54737;
+select * from jobs.event_log where job_pool_id = 54737;

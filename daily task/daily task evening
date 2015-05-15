@@ -1,0 +1,59 @@
+-----------------
+https://jira.caltesting.org/browse/CAASPP-1956
+
+ssh app-01.mt.caaspp.prod.iad3.caltesting.org
+
+sudo -l
+
+source /project/devops/.tomcat_profile
+
+chkjobname.sh OrgImportProcess (if this completed then go to)
+
+chkjonname.sh AirInstitutionInfo (if this completed then go to)
+
+cd /var/lib/tomcat6/remote/orgexportAIR
+
+ls -lrt
+
+source /project/devops/.airorg
+
+send.py /InstitutionOrgExport (copy this out put to jira)
+
+countit.sh filename or filedate
+
+-----------------------
+
+chkjobname.sh StudentEnrollment (if this completed then go to)
+
+chkjobname.sh StudentInfoAIR (if this completed then go to)
+
+chkjobname.sh StudentRegInfoAIR (if this completed then go to)
+
+
+cd var/lib/tomcat6/remote/StudentExportAIR
+
+ls -lrt | grep filedate |wc -l (make sure there are 32 files)
+
+Airstupostproc.sh filedate (copy this out put to jira expect last line)
+
+cat/tmp/studentExport-04292015.0ut (copy this out put to jira)
+
+wc -l last filename (CA_StudentExport_04292015_18495d.csv)
+
+countit.sh CA_StudentExport_04292015_184956.csv (copy this out put to jira)
+
+
+source /project/devops/.airstu
+
+send.py /public/TIDD/-------/Studentaccomidation
+
+cat project/devops/.airstu
+
+
+
+
+
+
+
+
+

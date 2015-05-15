@@ -1,0 +1,62 @@
+2Daily Tasks
+	MORNING
+	1.	Check if jobs completed: OrgImportProcess (if file in orgUpload then it completed)
+		CDE Org File to ETS > Post to ETS Tumbleweed (CAASPP-1924)
+			FmHost: bat01:/var/lib/tomcat6/remote/orgUpload
+			source /projects/devops/.sftpTW
+			Path: /projects/devops/studentExportAIR/send.py "/CAASPP/CALPADS Org Files" $SFTP_FILE
+
+		Inactive Students > Run the script (page 8 of doc, CAASPP-1340)
+			/projects/devops/studentExportAIR/chkjobname.sh OrgImportProcess
+			/projects/devops/studentExportAIR/chkjobname.sh CDEStudentProcess
+			
+			(run as tomcat)
+			cd /projects/devops/CDEMonitorScripts
+			./check_stale_students.sh
+			rm stale_student_list.txt
+			ln -s stat_student_list_[date] stale_student_list.txt
+			./stalestudents.sh
+			
+		CTS Orgs > Post to ETS Tumbleweed (page 14 of doc, CAASPP-1685)
+			FmHost: bat01:/var/lib/tomcat6/remote/orgExportCTS
+			source /projects/devops/.sftpTW
+			Path: /projects/devops/studentExportAIR/send.py /TOMS-SBACK12/Institution $SFTP_FILE
+			Counts: /projects/devops/studentExportAIR/countit.sh $FILEDATE
+
+		CTS Students > Post to ETS Tumbleweed (page 15 of doc, CAASPP-1685)
+			FmHost: bat01:/var/lib/tomcat6/remote/studentExportCTS
+			source /projects/devops/.sftpTW
+			SFTP: /projects/devops/studentExportAIR/send.py /TOMS-SBACK12/Registration $SFTP_FILE
+			Counts: /projects/devops/studentExportAIR/countit.sh $FILEDATE
+			
+On HOLD		IMS Student > Post to ETS Tumbleweed
+			FmHost: bat01:/var/lib/tomcat6/remote/studentExportIMS
+			source /projects/devops/.sftpTW
+			SFTP: /projects/devops/studentExportAIR/send.py /TOMS-IMS/TOMS_to_IMS/CAASPP $SFTP_FILE
+			
+		CTS Students > reset date value
+			/projects/devops/studentExportAIR/CTS_epoch.sh (edit script and put values in)
+
+		Automated - Run Script > Duplicate Order Windows (CAASPP-1932)
+		
+		Automated - Run Script > Enrollment Scripts > automate (Waiting for Roger)
+		cat caaspp-1087.sql | psql -h db-01.mt.caaspp.prod.iad3.caltesting.org -U caaspp-mt-prod -d caaspp-mt-prod
+
+	EVENING
+		Enrollment > kick off via TOMS Trigger
+		AIR Student DIFF > kick off via TOMS Trigger
+		Student Roster > kick off via TOMS Trigger
+		CTS Student > kick off via TOMS Trigger
+		
+		AIR Org (page 11)
+			/var/lib/tomcat6/remote/orgExportAIR
+			source /projects/devops/.airorg
+			SFTP: /projects/devops/studentExportAIR/send.py /Institutions $SFTP_FILE
+			Counts: /projects/devops/studentExportAIR/countit.sh $FILEDATE
+			
+		AIR Student DIFF > Process File and post to AIR SFTP
+			/var/lib/tomcat6/remote/studentExportAIR
+			source /projects/devops/.airorg
+			SFTP: /projects/devops/studentExportAIR/send.py /Public/TIDE/CA/ETS/Dataexchange/Incoming/StudentDemographics/ $SFTP_FILE
+			SFTP: /projects/devops/studentExportAIR/send.py /Public/TIDE/CA/ETS/Dataexchange/Incoming/StudentAccommodations/ $SFTP_FILE
+			Counts from display and from file in /tmp
