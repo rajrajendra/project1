@@ -1,0 +1,1273 @@
+2014-10-07 version 6.2
+
+This is a maintenance release to fix a regression in SQL traffic graphs and
+fix some other minor issues.
+
+The release also add a new option -D or --dns-resolv to map client ip addresses
+to FQDN without having log_hostname enabled on the postgresql's configuration
+
+	- Do not display queries in Slowest individual, Time consuming and
+	  Normalized slowest queries reports when there is no duration in
+	  log file. Display NO DATASET instead.
+	- Fix min/max queries in SQL traffic that was based on duration instead
+	  of query count.
+	- Fix wrong unit to Synced files in Checkpoints files report. Thanks
+	  to Levente Birta for the report.
+	- Enable allow_loose_quotes in Text::CSV_XS call to fix CSV parsing
+	  error when fields have quote inside an unquoted field. Thanks to
+	  Josh Berkus for the report.
+	- Add -D | --dns-resolv command line option to replace ip addresses
+	  by their DNS name. Be warned that this can slow down pgBagder a lot.
+	  Thanks to Jiri Hlinka for the feature request.
+
+2014-09-25 version 6.1
+
+This release fix some issues and adds some new features. It adds a new option
+-B or --bar-graph to use bar instead of line in graphs. It will also keep tick
+formatting when zooming.
+
+The release also add a new program: pgbadger_tools to demonstrate how to
+works with pgBadger binary files to build your own new feature. The first
+tools 'explain-slowest' allow printing of top slowest queries as EXPLAIN
+statements. There's also additional options to execute automatically the
+statements with EXPLAIN ANALYZE and get the execution plan. See help of the
+program for more information or the README file in the tools directory.
+
+Some modifications will change certain behavior:
+
+	- The -T | --title text value will now be displayed instead of the
+	  pgBadger label right after the logo. It was previously displayed
+	  on mouse over the pgBadger label.
+
+Here is the full list of changes/fixes:
+
+	- Change -T | --title position on pgBadger report. Title now override
+	  the pgBadger label. Thanks to Julien Rouhauld for the patch.
+	- Add --file-per-query and --format-query option to write each slowest
+	  query in separate file named qryXXX.sql and perform minimal formating
+	  of the queries. Thanks to Rodolphe Quiedeville for the patch.
+	- Remove debug query from explain-slowest tool.
+	- Fix surge in sessions number report when an exclusion or inclusion
+	  option (dbname, user, appname, etc.) is used. Thanks to suyah for the
+	  report.
+	- Fix fatal error when remote log file is 0 size. Thanks to Julien
+	  Rouhaud for the report.
+	- Allow pgbadger_tools --explain-slowest to automatically execute the
+	  EXPLAIN statements an report the plan. See pgbadger_tools --help for
+	  more explanation.
+	- Add --analyze option to replace EXPLAIN statements by EXPLAIN
+	  (ANALYZE, VERBOSE, BUFFERS).
+	- Move pgbadger_tools program and README.tools into the tools/
+	  subdirectory with removing the extension. Add more comments and
+	  explanations.
+	- Fix case where die with interrupt signal is received when using -e
+	  option. Thanks to Lloyd Albin for the report.
+	- Add a new program pgbadger_tools to demonstrate how to deal with
+	  pgBadger binary files to build your own new feature. The first one
+	  'explain-slowest' allow printing of top slowest queries as EXPLAIN
+	  statements.
+	- Keep tick formatting when zooming. Thanks to Julien Rouhaud for the
+	  patch.
+	- Fix automatic detection of rsyslogd logs. Thanks to David Day for
+	  the report.
+	- Fix issue in calculating min/max/avg in "General Activity" report. It
+	  was build on the sum of queries duration per minutes instead of each
+	  duration. Thanks to Jayadevan M for the report.
+	- The same issue remains with percentile that are build using the sum of
+	  duration per minutes and doesn't represent the real queries duration.
+	- This commit also include a modification in convert_time() method to
+	  reports milliseconds.
+	- Add -B or --bar-graph command line option to use bar instead of line
+	  in graph. Thanks to Bart Dopheide for the suggestion.
+	- Fix Checkpoint Wal files usage graph title.
+
+2014-08-08 version 6.0
+
+This new major release adds some new features like automatic cleanup of binary
+files in incremental mode or maximum number of weeks for reports retention.
+It improve the incremental mode with allowing the use of multiprocessing with
+multiple log file.
+
+It also adds report of query latency percentile on the general activity table
+(percentiles are 90, 95, 99).
+
+There's also a new output format: JSON. This format is good for sharing data
+with other languages, which makes it easy to integrate pgBadger's result into
+other monitoring tools.
+
+You may want to expose your reports but not the data, using the --anonymize
+option pgBadger will be able to anonymize all literal values in the queries.
+
+Sometime select to copy a query from the report could be a pain. There's now
+a click-to-select button in front of each query that allow you to just use
+Ctrl+C to copy it on clipboard
+
+The use of the new -X option also allow pgBadger to write out extra files to
+the outdir when creating incremental reports. Those files are the CSS and
+Javascript code normally repeated in each HTLM files.
+
+Warning: the behavior of pgBadger in incremental mode has changed. It will now
+always cleanup the output directory of all the obsolete binary file. If you were
+using those files to build your own reports, you can prevent pgBadger to remove
+them by using the --noclean option. Note that if you use the retention feature,
+all those files in obsolete directories will be removed too.
+
+Here is the complete list of changes.
+
+
+	- Javascript improvement to use only one call of sql_select and
+	  sql_format. Use jQuery selector instead of getElementById to
+	  avoid js errors when not found. Thanks to Julien Rouhaud for the
+	  patches.
+	- Add -R | --retention command line option to set the maximum number of
+	  week reports to preserve in the output directory for incremental mode.
+	  Thanks to Kong Man for the feature request.
+	- Session count is immediately decreased when a FATAL error is received
+	  in the current session to prevent overcount of simultaneous session
+	  number. Thanks to Josh Berkus for the report.
+	- Fix issue in incremental mode when parsing is stopped after rotating
+	  log and rotated log has new lines. The new file was not parsed at all.
+	  Thanks to CZAirwolf for the report.
+	- Fix revert to single thread when last_line_parsed exists. Thanks to
+	  Bruno Almeida for the report.
+	- Fix issue in handling SIGTERM/SIGINT that cause pgbadger to continue.
+	- Add autoclean feature to pgbadger in incremental mode. pgbadger will
+	  now removed automatically obsolete binary files unless you specify
+	  --noclean at command line.
+	- Add new command line option --anonymize to obscure all literals in
+	  queries/errors to hide confidential data. Thanks to wmorancfi for the
+	  feature request.
+	- Fix single "SELECT;" as a query in a report. Thanks to Marc Cousin for
+	  the report.
+	- Add a copy icon in front of each query in the report to select the
+	  entire query. Thanks to Josh Berkus for the feature request.
+	- Fix wrong move to beginning of a file if the file was modified after
+	  have been parsed a time. Thanks to Herve Werner for the report.
+	- Allow pgBadger to write out extra files to outdir when creating
+	  incremental reports. Require the use of the -X or --extra-files option
+	  in incremental mode. Thanks to Matthew Musgrove for the feature request.
+	- Fix incomplete handling of XZ compressed format.
+	- Fix move to offset in incremental mode with multiprocess and incomplete
+	  condition when file is smaller than the last offset. Thanks to Herve
+	  Werner for the report.
+	- Allow/improve incremental mode with multiple log file and multiprocess.
+	- Fix incorrect location of temporary file storing last parsed line in
+	  multiprocess+incremental mode. Thanks to Herve Werner for the report.
+	- Fix remote ssh command error sh: 2: Syntax error: "|" unexpected.
+	  Thanks to Herve Werner for the report.
+	- Fix missing database name in samples of top queries reports. Thanks to
+	  Thomas Reiss for the report.
+	- Add minimal documentation about JSON output format.
+	- Add execute attribute to pgbadger in the source repository, some may
+	  find this more helpful when pgbadger is not installed and executed
+	  directly from this repository.
+	- Fix issue with csv log format and incremental mode. Thanks to Suya for
+	  the report and the help to solve the issue. There also a fix to support
+	  autovacuum statistic with csv format.
+	- Fix bad URL to documentation. Thanks to Rodolphe Quiedeville for the report.
+	- Two minor change to made easier to use Tsung scenario: Remove the first
+	  empty line and replace probability by weight. Now it is possible to use
+	  the scenario as is with Tsung 1.5.
+	- Fix incremental mode where weeks on index page start on sunday and week
+	  reports start on monday. Thanks to flopma and birkosan for the report.
+	- Replace label "More CPU costly" by "Highest CPU-cost". Thanks to Marc
+	  Cousin for the suggestion.
+	- Add query latency percentile to General Activity table (percentiles are
+	  90, 95, 99). Thanks to Himanchali for the patch.
+	- Fix typon pgbadger call. Thanks to Guilhem Rambal for the report.
+	- Add JSON support for output format.  JSON format is good for sharing data
+	  with other languages, which makes it easy to integrate pgBadger's result
+	  into other monitoring tools like Cacti or Graphite. Thanks to Shanzhang
+	  Lan for the patch.
+	- Update documentation about remote mode feature.
+	- Update documentation to inform that the xz utility should be at least in
+	  version 5.05 to support the --robot command line option. Thanks to Xavier
+	  Millies-Lacroix for the report.
+	- Fix remote logfile parsing. Thanks to Herve Werner for the report.
+
+2014-05-05 version 5.1-1
+
+	- Fix parsing of remote log file, forgot to apply some patches.
+	  Thank to Herve Werner for the report.
+
+2014-05-04 version 5.1
+
+This new release fixes several issues and adds several new features like:
+
+  * Support to named PREPARE and EXECUTE queries. They are replaced by
+    the real prepare statement and reported into top queries.
+  * Add new --exclude-line command line option for excluding immediately
+    log entries matching any regex.
+  * Included remote and client information into the most frequent events.
+  * pgBadger is now able to parse remote logfiles using a password less
+    ssh connection and generate locally the reports.
+  * Histogram granularity can be adjusted using the -A command line option.
+  * Add new detail information on top queries to show when the query is a
+    bind query.
+  * Support to logfile compressed using the xz compression format.
+  * Change week/day menu in incremental index, it is now represented as
+    usual with a calendar view per month.
+  * Fix various compatibility issue with Windows and Perl 5.8
+
+Here is the full list of changes:
+
+	- fixed calendar display and correct typo. Thanks to brunomgalmeida
+	  for the patch.
+	- revert to single thread if file is small. Thanks to brunomgalmeida
+	  for the patch.
+	- print calendars 4+4+4 instead of 3+4+4+1 when looking at full year.
+	  Thanks to brunomgalmeida for the patch.
+	- Add --exclude-line option for excluding log entries with a regex based
+	  on the full log line. Thanks to ferfebles for the feature request.
+	- Fix SQL keywords that was beautified twice.
+	- Remove duplicate pg_keyword in SQL beautifier.
+	- Fix increment of session when --disable-session is activated.
+	- Fix missing unit in Checkpoints Activity report when time value is
+	  empty. Thanks to Herve Werner for the report.
+	- Fix double information in histogram data when period is the hour.
+	- Add support to named PREPARE and EXECUTE queries. Calls to EXECUTE
+	  statements are now replaced by the prepared query and show samples
+	  with parameters. Thanks to Brian DeRocher for the feature request.
+	- Included Remote and Client information into the most frequent events
+	  examples. Thanks to brunomgalmeida for the patch.
+	- Fix documentation about various awkward phrasings, grammar, and
+	  spelling. Consistently capitalize "pgBadger" as such, except for
+	  command examples which should stay all-lowercase. Thanks to Josh
+	  Kupershmidt for the patch.
+	- Fix incremental mode on Windows by replacing %F and %u POSIX::strftime
+	  format to %Y-%m-%d and %w. Thanks to dthiery for the report.
+	- Remove Examples button when there is no examples available.
+	- Fix label on tips in histogram of errors reports.
+	- Fix error details in incremental mode in Most Frequent Errors/Events
+	  report. Thanks to Herve Werner for the report.
+	- Fix Sync time value in Checkpoints buffers report. Thanks to Herve
+	  Werner for the report.
+	- Fix wrong connections per host count. Thanks to Herve Werner for the
+	  report.
+	- Allow pgBadger to parse remote log file using a password less ssh
+	  connection. Thanks to Orange OLPS department for the feature request.
+	- Histogram granularity can be adjusted using the -A command line
+	  option. By default they will report the mean of each top queries or
+	  errors occurring per hour. You can now specify the granularity down to
+	  the minute. Thanks to Orange OLPS department for the feature request.
+	- Add new detail information on top queries to show when the query is
+	  a bind query. Thanks to Orange OLPS department for the feature request.
+	- Fix queries that exceed the size of the container.
+	- Add unit (seconds) to checkpoint write/sync time in the checkpoints
+	  activity report. Thanks to Orange OLPS department for the report.
+	- Fix missing -J option in usage.
+	- Fix incomplete lines in split logfile to rewind to the beginning of
+	  the line. Thanks to brunomgalmeida for the patch.
+	- Fix tsung output and add tsung xml header sample to output file.
+	- Make it possible to do --sample 0 (prior it was falling back to the
+	  default of 3). Thanks to William Moran for the patch.
+	- Fix xz command to be script readable and always have size in bytes:
+	  xz --robot -l %f | grep totals | awk "{print $5}"
+	- Add support to logfile compressed by the xz compression format.
+	  Thanks to Adrien Nayrat for the patch.
+	- Do not increment queries duration histogram when prepare|parse|bind
+	  log are found, but only with execute log. Thanks to Josh Berkus for
+	  the report.
+	- Fix normalization of error message about unique violation when
+	  creating intermediate dirs. Thanks to Tim Sampson for the report.
+	- Allow use of Perl metacharacters like [..] in application name.
+	  Thanks to Magnus Persson for the report.
+	- Fix dataset tip to be displayed above image control button. Thanks
+	  to Ronan Dunklau for the fix.
+	- Renamed the Reset bouton to "To Chart" to avoid confusion with unzoom
+	  feature.
+	- Fix writing of empty incremental last parsed file.
+	- Fix several other graphs
+	- Fix additional message at end of query or error when it was logged
+	  from application output. Thanks to Herve Werner for the report.
+	- Fix checkpoint and vacuum graphs when all dataset does not have all
+	  values. Thanks to Herve Werner for the report.
+	- Fix week numbered -1 in calendar view.
+	- Change week/day menu in incremental index, it is now represented as
+	  usual with a calendar view per month. Thanks to Thom Brown for the
+	  feature request.
+	- Load FileHandle to fix error: Can not locate object method "seek"
+	  via package "IO::Handle" with perl 5.8. Thanks to hkrizek for the
+	  report.
+	- Fix count of queries in progress bar when there is compressed file
+	  and multiprocess is enabled. Thanks to Johnny Tan for the report.
+	- Fix debug message "Start parsing at offset"
+	- Add ordering in queries times histogram. Thanks to Ulf Renman for
+	  the report.
+	- Fix various typos. Thanks to Thom Brown for the patch.
+	- Fix Makefile error, "WriteMakefile: Need even number of args at
+	  Makefile.PL" with Perl 5.8. Thanks to Fangr Zhang for the report.
+	- Fix some typo in Changelog
+
+2014-02-05 version 5.0
+
+This new major release adds some new features like incremental mode and SQL
+queries times histogram. There is also a hourly graphic representation of the
+count and average duration of top normalized queries. Same for errors or events,
+you will be able to see graphically at which hours they are occurring the most
+often.
+
+The incremental mode is an old request issued at PgCon Ottawa 2012 that concern
+the ability to construct incremental reports with successive runs of pgBadger.
+It is now possible to run pgbadger each days or even more, each hours, and have
+cumulative reports per day and per week. A top index page allow you to go
+directly to the weekly and daily reports.
+
+This mode have been build with simplicity in mind so running pgbadger by cron
+as follow:
+
+	0 23 * * * pgbadger -q -I -O /var/www/pgbadger/ /var/log/postgresql.log
+
+is enough to have daily and weekly reports viewable using your browser.
+
+You can take a look at a sample report at http://dalibo.github.io/pgbadger/demov5/index.html
+
+There's also a useful improvement to allow pgBadger to seek directly to the
+last position in the same log file after a successive execution. This feature
+is only available using the incremental mode or the -l option and parsing a
+single log file. Let's say you have a weekly rotated log file and want to run
+pgBadger each days. With 2GB of log per day, pgbadger was spending 5 minutes
+per block of 2 GB to reach the last position in the log, so at the end of the
+week this feature will save you 35 minutes. Now pgBadger will start parsing
+new log entries immediately. This feature is compatible with the multiprocess
+mode using -j option (n processes for one log file).
+
+Histogram of query times is a new report in top queries slide that shows the
+query times distribution during the analyzed period. For example:
+
+	Range 		Count 		Percentage
+	--------------------------------------------
+	0-1ms		10,367,313	53.52%
+	1-5ms		799,883		4.13%
+	5-10ms		451,646		2.33%
+	10-25ms		2,965,883	15.31%
+	25-50ms		4,510,258	23.28%
+	50-100ms	180,975		0.93%
+	100-500ms	87,613		0.45%
+	500-1000ms	5,856		0.03%
+	1000-10000ms	2,697		0.01%
+	> 10000ms	74		0.00%
+
+
+There is also some graphic and report improvements, like the mouse tracker
+formatting that have been reviewed. It now shows a vertical crosshair and
+all dataset values at a time when mouse pointer moves over series. Automatic
+queries formatting has also been changed, it is now done on double click
+event as simple click was painful when you want to copy some part of the
+queries.
+
+The report "Simultaneous Connections" has been relabeled into "Established
+Connections", it is less confusing as many people think that this is the number
+of simultaneous sessions, which is not the case. It only count the number of
+connections established at same time.
+
+Autovacuum reports now associate database name to the autovacuum and autoanalyze
+entries. Statistics now refer to "dbname.schema.table", previous versions was only
+showing the pair "schema.table".
+
+This release also adds Session peak information and a report about Simultaneous
+sessions. Parameters log_connections and log_disconnections must be enabled in
+postgresql.conf.
+
+Complete ChangeLog:
+
+	- Fix size of SQL queries columns to prevent exceeding screen width.
+	- Add new histogram reports on top normalized queries and top errors
+	  or event. It shows at what hours and in which quantity the queries
+	  or errors appears.
+	- Add seeking to last parser position in log file in incremental mode.
+	  This prevent parsing all the file to find the last line parse from
+	  previous run.  This only works when parsing a single flat file, -j
+	  option is permitted. Thanks to ioguix for the kick.
+	- Rewrite reloading of last log time from binary files.
+	- Fix missing statistics of last parsed queries in incremental mode.
+	- Fix bug in incremental mode that prevent reindexing a previous day.
+	  Thanks to Martin Prochazka for the great help.
+	- Fix missing label "Avg duration" on column header in details of Most
+	  frequent queries (N).
+	- Add vertical crosshair on graph.
+	- Fix case where queries and events was not updated when using -b and
+	  -e command line. Thanks to Nicolas Thauvin for the report.
+	- Fix week sorting on incremental report main index page. Thanks to
+	  Martin Prochazka for the report.
+	- Add "Histogram of query times" report to show statistics like
+	  0-100ms : 80%, 100-500ms :14%, 500-1000ms : 3%, > 1000ms : 1%.
+	  Thanks to tmihail for the feature request.
+	- Format mouse tracker on graphs to show all dataset value at a time.
+	- Add control of -o vs -O option with incremental mode to prevent
+	  wrong use.
+	- Change log level of missing LAST_PARSED.tmp file to WARNING and
+	  add a HINT.
+	- Update copyright date to 2014
+	- Fix empty reports of connections. Thanks to Reeshna Ramakrishnan
+	  for the report.
+	- Fix display of connections peak when no connection was reported.
+	- Fix warning on META_MERGE for ExtUtils::MakeMaker < 6.46. Thanks
+	  to Julien Rouhaud for the patch.
+	- Add documentation about automatic incremental mode.
+	- Add incremental mode to pgBadger. This mode will build a report
+	  per day and a cumulative report per week. It also create an index
+	  interface to easiest access to the different report. Must be run,
+	  for example, as:
+		pgbadger /var/log/postgresql.log.1 -I -O /var/www/pgbadger/
+	  after a daily PostgreSQL log file rotation.
+	- Add -O | --outdir path to specify the directory where out file
+	  must be saved.
+	- Automatic queries formatting is now done on double click event,
+	  simple click was painful when you want to copy some part of the
+	  queries. Thanks to Guillaume Smet for the feature request.
+	- Remove calls of binmode to force html file output to be utf8 as
+	  there is some bad side effect. Thanks to akorotkov for the report.
+	- Remove use of Time::HiRes Perl module as some distributions does
+	  not include this module by default in core Perl install.
+	- Fix "Wide character in print" Perl message by setting binmode
+	  to :utf8. Thanks to Casey Allen Shobe for the report.
+	- Fix application name search regex to handle application name with
+	  space like "pgAdmin III - Query Tool".
+	- Fix wrong timestamps saved with top queries. Thanks to Herve Werner
+	  for the report.
+	- Fix missing logs types statitics when using binary mode. Thanks to
+	  Herve Werner for the report.
+	- Fix Queries by application table column header: Database replaced
+	  by Application. Thanks to Herve Werner for the report.
+	- Add "Max number of times the same event was reported" report in
+	  Global stats Events tab.
+	- Replace "Number of errors" by "Number of ERROR entries" and add
+	  "Number of FATAL entries".
+	- Replace "Number of errors" by "Number of events" and "Total errors
+	  found" by "Total events found" in Events reports. Thanks to Herve
+	  Werner for the report.
+	- Fix title error in Sessions per database.
+	- Fix clicking on the info link to not go back to the top of the page.
+	  Thanks to Guillaume Smet for the report and solution.
+	- Fix incremental report from binary output where binary data was not
+	  loaded if no queries were present in log file. Thanks to Herve Werner
+	  for the report.
+	- Fix parsing issue when log_error_verbosity = verbose. Thanks to vorko
+	  for the report.
+	- Add Session peak information and a report about Simultaneous sessions.
+	  log_connections+log_disconnections must be enabled in postgresql.conf.
+	- Fix wrong requests number in Queries by user and by host. Thanks to
+	  Jehan-Guillaume de Rorthais for the report.
+	- Fix issue with rsyslog format failing to parse logs. Thanks to Tim
+	  Sampson for the report.
+	- Associate autovacuum and autoanalyze log entry to the corresponding
+	  database name. Thanks to Herve Werner for the feature request.
+	- Change "Simultaneous Connections" label into "Established Connections",
+	  it is less confusing as many people think that this is the number of
+	  simultaneous sessions, which is not the case. It only count the number
+	  of connections established at same time. Thanks to Ronan Dunklau for
+	  the report.
+
+2013-11-08 version 4.1
+
+This release fixes two major bugs and some others minor issues. There's also a
+new command line option --exclude-appname that allow exclusion from the report
+of queries generated by a specific program, like pg_dump. Documentation have
+been updated with a new chapter about building incremental reports.
+
+	- Add log_autovacuum_min_duration into documentation in chapter about
+	  postgresql configuration directives. Thanks to Herve Werner for the
+	  report.
+	- Add chapter about "Incremental reports" into documentation.
+	- Fix reports with per minutes average where last time fraction was
+	  not reported. Thanks to Ludovic Levesque and Vincent Laborie for the
+	  report.
+	- Fix unterminated comment in information popup. Thanks to Ronan
+	  Dunklau for the patch.
+	- Add --exclude-appname command line option to eliminate unwanted
+	  traffic generated by a specific application. Thanks to Steve Crawford
+	  for the feature request.
+	- Allow external links use into URL to go to a specific report. Thanks
+	  to Hubert depesz Lubaczewski for the feature request.
+	- Fix empty reports when parsing compressed files with the -j option
+	  which is not allowed with compressed file. Thanks to Vincent Laborie
+	  for the report.
+	- Prevent progress bar length to increase after 100% when real size is
+	  greater than estimated size (issue found with huge compressed file).
+	- Correct some spelling and grammar in ChangeLog and pgbadger. Thanks
+	  to Thom Brown for the patch.
+	- Fix major bug on SQL traffic reports with wrong min value and bad
+	  average value on select reports, add min/max for select queries.
+	  Thanks to Vincent Laborie for the report.
+
+2013-10-31 - Version 4.0
+
+This major release is the "Say goodbye to the fouine" release. With a full
+rewrite of the reports design, pgBadger has now turned the HTML reports into
+a more intuitive user experience and professional look.
+
+The report is now driven by a dynamic menu with the help of the embedded
+Bootstrap library. Every main menu corresponds to a hidden slide that is
+revealed when the menu or one of its submenus is activated. There's
+also the embedded font Font Awesome webfont to beautify the report.
+
+Every statistics report now includes a key value section that immediately
+shows you some of the relevant information. Pie charts have also been
+separated from their data tables using two tabs, one for the chart and the
+other one for the data.
+
+Tables reporting hourly statistics have been moved to a multiple tabs report
+following the data. This is used with General (queries, connections, sessions),
+Checkpoints (buffer, files, warnings), Temporary files and Vacuums activities.
+
+There's some new useful information shown in the key value sections. Peak
+information shows the number and datetime of the highest activity. Here is the
+list of those reports:
+
+	- Queries peak
+	- Read queries peak
+	- Write queries peak
+	- Connections peak
+	- Checkpoints peak
+	- WAL files usage Peak
+	- Checkpoints warnings peak
+	- Temporary file size peak
+	- Temporary file number peak
+
+Reports about Checkpoints and Restartpoints have been merged into a single report.
+These are almost one in the same event, except that restartpoints occur on a slave
+cluster, so there was no need to distinguish between the two.
+
+Recent PostgreSQL versions add additional information about checkpoints, the
+number of synced files, the longest sync and the average of sync time per file.
+pgBadger collects and shows this information in the Checkpoint Activity report.
+
+There's also some new reports:
+
+	- Prepared queries ratio (execute vs prepare)
+	- Prepared over normal queries
+	- Queries (select, insert, update, delete) per user/host/application
+	- Pie charts for tables with the most tuples and pages removed during vacuum.
+
+The vacuum report will now highlight the costly tables during a vacuum or
+analyze of a database.
+
+The errors are now highlighted by a different color following the level.
+A LOG level will be green, HINT will be yellow, WARNING orange, ERROR red
+and FATAL dark red.
+
+Some changes in the binary format are not backward compatible and the option
+--client has been removed as it has been superseded by --dbclient for a long time now.
+
+If you are running a pg_dump or some batch process with very slow queries, your
+report analysis will be hindered by those queries having unwanted prominence in the
+report. Before this release it was a pain to exclude those queries from the
+report. Now you can use the --exclude-time command line option to exclude all
+traces matching the given time regexp from the report. For example, let's say
+you have a pg_dump at 13:00 each day during half an hour, you can use pgbadger
+as follows:
+
+	pgbadger --exclude-time "2013-09-.* 13:.*" postgresql.log 
+
+If you are also running a pg_dump at night, let's say 22:00, you can write it
+as follows:
+
+	pgbadger --exclude-time '2013-09-\d+ 13:[0-3]' --exclude-time '2013-09-\d+ 22:[0-3]' postgresql.log 
+
+or more shortly:
+
+	pgbadger --exclude-time '2013-09-\d+ (13|22):[0-3]' postgresql.log 
+
+Exclude time always requires the iso notation yyyy-mm-dd hh:mm:ss, even if log
+format is syslog. This is the same for all time-related options. Use this option
+with care as it has a high cost on the parser performance.
+
+
+2013-09-17 - version 3.6
+
+Still an other version in 3.x branch to fix two major bugs in vacuum and checkpoint
+graphs. Some other minors bugs has also been fixed.
+
+	- Fix grammar in --quiet usage. Thanks to stephen-a-ingram for the report.
+	- Fix reporting period to starts after the last --last-parsed value instead
+	  of the first log line. Thanks to Keith Fiske for the report.
+	- Add --csv-separator command line usage to documentation.
+	- Fix CSV log parser and add --csv-separator command line option to allow
+	  change of the default csv field separator, coma, in any other character.
+	- Avoid "negative look behind not implemented" errors on perl 5.16/5.18.
+	  Thanks to Marco Baringer for the patch.
+	- Support timestamps for begin/end with fractional seconds (so it'll handle
+	  postgresql's normal string representation of timestamps).
+	- When using negative look behind set sub-regexp to -i (not case insensitive)
+	  to avoid issues where some upper case letter sequence, like SS or ST.
+	- Change shebang from /usr/bin/perl to /usr/bin/env perl so that user-local
+	  (perlbrew) perls will get used.
+	- Fix empty graph of autovacuum and autoanalyze.
+	- Fix checkpoint graphs that was not displayed any more.
+
+
+2013-07-11 - Version 3.5
+
+Last release of the 3.x branch, this is a bug fix release that also adds some
+pretty print of Y axis number on graphs and a new graph that groups queries
+duration series that was shown as second Y axis on graphs, as well as a new
+graph with number of temporary file that was also used as second Y axis.
+
+	- Split temporary files report into two graphs (files size and number
+	  of file) to no more used a second Y axis with flotr2 - mouse tracker
+	  is not working as expected.
+	- Duration series representing the second Y axis in queries graph have
+	  been removed and are now drawn in a new "Average queries duration"
+	  independant graph.
+	- Add pretty print of numbers in Y axis and mouse tracker output with
+	  PB, TB, GB, KB, B units, and seconds, microseconds. Number without
+	  unit are shown with P, T, M, K suffix for easiest very long number
+	  reading.
+	- Remove Query type reports when log only contains duration.
+	- Fix display of checkpoint hourly report with no entry.
+	- Fix count in Query type report.
+	- Fix minimal statistics output when nothing was load from log file.
+	  Thanks to Herve Werner for the report.
+	- Fix several bug in log line parser. Thanks to Den Untevskiy for the
+	  report.
+	- Fix bug in last parsed storage when log files was not provided in the
+	  right order. Thanks to Herve Werner for the report.
+	- Fix orphan lines wrongly associated to previous queries instead of
+	  temporary file and lock logged statement. Thanks to Den Untevskiy for
+	  the report.
+	- Fix number of different samples shown in events report.
+	- Escape HTML tags on error messages examples. Thanks to Mael Rimbault
+	  for the report.
+	- Remove some temporary debug informations used with some LOG messages
+	  reported as events.
+	- Fix several issues with restartpoint and temporary files reports.
+	  Thanks to Guillaume Lelarge for the report.
+	- Fix issue when an absolute path was given to the incremental file.
+	  Thanks to Herve Werner for the report.
+	- Remove creation of incremental temp file $tmp_last_parsed when not
+	  running in multiprocess mode. Thanks to Herve Werner for the report.
+
+
+2013-06-18 - Version 3.4
+
+This release adds lot of graphic improvements and a better rendering with logs
+over few hours. There's also some bug fixes especially on report of queries that
+generate the most temporary files.
+
+	- Update flotr2.min.js to latest github code.
+	- Add mouse tracking over y2axis.
+	- Add label/legend information to ticks displayed on mouseover graphs.
+	- Fix documentation about log_statement and log_min_duration_statement.
+	  Thanks to Herve Werner for the report.
+	- Fix missing top queries for locks and temporary files in multiprocess
+	  mode.
+	- Cleanup code to remove storage of unused information about connection.
+	- Divide the huge dump_as_html() method with one method per each report.
+	- Checkpoints, restart points and temporary files are now drawn using a
+	  period of 5 minutes per default instead of one hour. Thanks to Josh
+	  Berkus for the feature request.
+	- Change fixed increment of one hour to five minutes on queries graphs
+	  "SELECT queries" and "Write queries". Remove graph "All queries" as,
+	  with a five minutes increment, it duplicates the "Queries per second".
+	  Thanks to Josh Berkus for the feature request.
+	- Fix typos. Thanks to Arsen Stasic for the patch.
+	- Add default HTML charset to utf-8 and a command line option --charset
+	  to be able to change the default. Thanks to thomas hankeuhh for the
+	  feature request.
+	- Fix missing temporary files query reports in some conditions. Thanks
+	  to Guillaume Lelarge and Thomas Reiss for the report.
+	- Fix some parsing issue with log generated by pg 7.4.
+	- Update documentation about missing new reports introduced in previous
+	  version 3.3.
+
+Note that it should be the last release of the 3.x branch unless there's major
+bug fixes, but next one will be a major release with a completely new design.
+
+
+2013-05-01 - Version 3.3
+
+This release adds four more useful reports about queries that generate locks and
+temporary files. An other new report about restart point on slaves and several
+bugs fix or cosmetic change. Support to parallel processing under Windows OS has
+been removed.
+
+	- Remove parallel processing under Windows platform, the use of waitpid
+	  is freezing pgbadger. Thanks to Saurabh Agrawal for the report. I'm
+	  not comfortable with that OS this is why support have been removed,
+	  if someone know how to fix that, please submit a patch.
+	- Fix Error in tempfile() under Windows. Thanks to Saurabh Agrawal for
+	  the report.
+	- Fix wrong queries storage with lock and temporary file reports. Thanks
+	  to Thomas Reiss for the report.
+	- Add samples queries to "Most frequent waiting queries" and "Queries
+	  generating the most temporary files" report.
+	- Add two more reports about locks: 'Most frequent waiting queries (N)",
+	  and "Queries that waited the most". Thanks to Thomas Reiss for the
+	  patch.
+	- Add two reports about temporary files: "Queries generating the most
+	  temporary files (N)" and "Queries generating the largest temporary
+	  files". Thanks to Thomas Reiss for the patch.
+	- Cosmetic change to the Min/Max/Avg duration columns.
+	- Fix report of samples error with csvlog format. Thanks to tpoindessous
+	  for the report.
+	- Add --disable-autovacuum to the documentation. Thanks to tpoindessous
+	  for the report.
+	- Fix unmatched ) in regex when using %s in prefix.
+	- Fix bad average size of temporary file in Overall statistics report.
+	  Thanks to Jehan Guillaume de Rorthais for the report.
+	- Add restartpoint reporting. Thanks to Guillaume Lelarge for the patch.
+	- Made some minor change in CSS.
+	- Replace %% in log line prefix internally by a single % so that it
+	  could be exactly the same than in log_line_prefix. Thanks to Cal
+	  Heldenbrand for the report.
+	- Fix perl documentation header, thanks to Cyril Bouthors for the patch.
+
+2013-04-07 - Version 3.2
+
+This is mostly a bug fix release, it also adds escaping of HTML code inside
+queries and the adds Min/Max reports with Average duration in all queries
+reports.
+
+	- In multiprocess mode, fix case where pgbadger does not update
+	  the last-parsed file and do not take care of the previous run.
+	  Thanks to Kong Man for the report.
+	- Fix case where pgbadger does not update the last-parsed file.
+	  Thanks to Kong Man for the report.
+	- Add CDATA to make validator happy. Thanks to Euler Taveira de
+	  Oliveira for the patch.
+	- Some code review by  Euler Taveira de Oliveira, thanks for the
+	  patch.
+	- Fix case where stat were multiplied by N when -J was set to N.
+	  Thanks to thegnorf for the report.
+	- Add a line in documentation about log_statement that disable
+	  log_min_duration_statement when it is set to all.
+	- Add quick note on how to contribute, thanks to Damien Clochard
+	  for the patch.
+	- Fix issue with logs read from stdin. Thanks to hubert depesz
+	  lubaczewski for the report.
+	- Force pgbadger to not try to beautify queries bigger than 10kb,
+	  this will take too much time. This value can be reduce in the
+	  future if hang with long queries still happen. Thanks to John
+	  Rouillard for the report.
+	- Fix an other issue in replacing bind param when the bind value
+	  is alone on a single line. Thanks to Kjeld Peters for the report.
+	- Fix parsing of compressed files together with uncompressed files
+	  using the the -j option. Uncompressed files are now processed using
+	  split method and compressed ones are parsed per one dedicated process.
+	- Replace zcat by gunzip -c to fix an issue on MacOsx. Thanks to
+	  Kjeld Peters for the report.
+	- Escape HTML code inside queries. Thanks to denstark for the report.
+	- Add Min/Max in addition to Average duration values in queries reports.
+	  Thanks to John Rouillard fot the feature request.
+	- Fix top slowest array size with binary format.
+	- Fix an other case with bind parameters with value in next line and
+	  the top N slowest queries that was repeated until N even if the real
+	  number of queries was lower. Thanks to Kjeld Peters for the reports.
+	- Fix non replacement of bind parameters where there is line breaks in
+	  the parameters, aka multiline bind parameters. Thanks to Kjeld Peters
+	  for the report.
+	- Fix error with seekable export tag with Perl v5.8. Thanks to Jeff Bohmer
+	  for the report.
+	- Fix parsing of non standard syslog lines begining with a timestamp like
+	  "2013-02-28T10:35:11-05:00". Thanks to Ryan P. Kelly for the report.
+	- Fix issue #65 where using -c | --dbclient with csvlog was broken. Thanks
+	  to Jaime Casanova for the report.
+	- Fix empty report in watchlog mode (-w option).
+
+2013-02-21 - Version 3.1
+
+This is a quick release to fix missing reports of most frequent errors and slowest
+normalized queries in previous version published yesterday.
+
+	- Fix empty report in watchlog mode (-w option).
+	- Force immediat die on command line options error.
+	- Fix missing report of most frequent events/errors report. Thanks to
+	  Vincent Laborie for the report.
+	- Fix missing report of slowest normalized queries.  Thanks to Vincent
+	  Laborie for the report.
+	- Fix display of last print of progress bar when quiet mode is enabled.
+
+2013-02-20 - Version 3.0
+
+This new major release adds parallel log processing by using as many cores as
+wanted to parse log files, the performances gain is directly related to the
+number of cores specified. There's also new reports about autovacuum/autoanalyze
+informations and many bugs have been fixed.
+
+	- Update documentation about log_duration, log_min_duration_statement
+	  and log_statement.
+	- Rewrite dirty code around log timestamp comparison to find timestamp
+	  of the specified begin or ending date.
+	- Remove distinction between logs with duration enabled from variables
+	  log_min_duration_statement and log_duration. Commands line options
+	  --enable-log_duration and --enable-log_min_duration have been removed.
+	- Update documentation about parallel processing.
+	- Remove usage of Storable::file_magic to autodetect binary format file,
+	  it is not include in core perl 5.8. Thanks to Marc Cousin for the
+	  report.
+	- Force multiprocess per file when files are compressed. Thanks to
+	  Julien Rouhaud for the report.
+	- Add progress bar logger for multiprocess by forking a dedicated
+	  process and using pipe. Also fix some bugs in using binary format
+	  that duplicate query/error samples per process.
+	- chmod 755 pgbadger
+	- Fix checkpoint reports when there is no checkpoint warnings.
+	- Fix non report of hourly connections/checkpoint/autovacuum when not
+	  query is found in log file. Thanks to Guillaume Lelarge for the
+	  report.
+	- Add better handling of signals in multiprocess mode.
+	- Add -J|--job_per_file command line option to force pgbadger to use
+	  one process per file instead of using all to parse one file. Useful
+	  to have better performances with lot of small log file.
+	- Fix parsing of orphan lines with stderr logs and log_line_prefix
+	  without session information into the prefix (%l).
+	- Update documentation about -j | --jobs option.
+	- Allow pgbadger to use several cores, aka multiprocessing. Add options
+	  -j | --jobs option to specify the number of core to use.
+	- Add autovacuum and autoanalyze infos to binary format.
+	- Fix case in SQL code highlighting where QQCODE temp keyword was not
+	  replaced. Thanks to Julien Ruhaud for the report.
+	- Fix CSS to draw autovacuum graph and change legend opacity.
+	- Add pie graph to show repartition of number of autovacuum per table
+	  and number of tuples removed by autovacuum per table.
+	- Add debug information about selected type of log duration format.
+	- Add report of tuples/pages removed in report of Vacuums by table.
+	- Fix major bug on syslog parser where years part of the date was
+	  wrongly extracted from current date with logs generated in 2012.
+	- Fix issue with Perl 5.16 that do not allow "ss" inside look-behind
+	  assertions. Thanks to Cedric for the report.
+	- New vacuum and analyze hourly reports and graphs. Thanks to Guillaume
+	  Lelarge for the patch.
+
+UPGRADE: if you are running pgbadger by cron take care if you were using one of
+the following option: --enable-log_min_duration  and --enable-log_duration, they
+have been removed and pgbadger will refuse to start.
+
+2013-01-17 - Version 2.3
+
+This release fixes several major issues especially with csvlog and a memory leak
+with log parsing using a start date. There's also several improvement like new
+reports of number of queries by database and application. Mouse over reported
+queries will show database, user, remote client and application name where they
+are executed.
+
+A new binary input/output format have been introduced to allow saving or reading
+precomputed statistics. This will allow incremental reports based on periodical
+runs of pgbader. This is a work in progress fully available with next coming
+major release.
+
+Several SQL code beautifier improvement from pgFormatter have also been merged.
+
+	- Clarify misleading statement about log_duration: log_duration may be
+	  turned on depending on desired information. Only log_statement must
+	  not be on. Thanks to Matt Romaine for the patch.
+	- Fix --dbname and --dbuser not working with csvlog format. Thanks to
+	  Luke Cyca for the report.
+	- Fix issue in SQL formatting that prevent left back indentation when
+	  major keywords were found. Thanks to Kevin Brannen for the report.
+	- Display 3 decimals in time report so that ms can be seen. Thanks to
+	  Adam Schroder for the request.
+	- Force the parser to not insert a new line after the SET keyword when
+	  the query begin with it. This is to preserve the single line with
+	  queries like SET client_encoding TO "utf8";
+	- Add better SQL formatting of update queries by adding a new line
+	  after the SET keyword. Thanks to pilat66 for the report.
+	- Update copyright and documentation.
+	- Queries without application name are now stored under others
+	  application name.
+	- Add report of number of queries by application if %a is specified in
+	  the log_line_prefix.
+	- Add link menu to the request per database and limit the display of
+	  this information when there is more than one database.
+	- Add report of requests per database.
+	- Add report of user,remote client and application name to all request
+	  info.
+	- Fix memory leak with option -b (--begin) and in incremental log
+	  parsing mode.
+	- Remove duration part from log format auto-detection. Thanks to
+	  Guillaume Lelarge for the report.
+	- Fix a performance issue on prettifying SQL queries that makes pgBagder
+	  several time slower that usual to generate the HTML output. Thanks to
+	  Vincent Laborie for the report.
+	- Add missing SQL::Beautify paternity.
+	- Add 'binary' format as input/output format. The binary output format
+	  allows to save log statistics in a non human readable file instead of
+	  an HTML or text file. These binary files might then be used as regular
+	  input files, combined or not, to produce a html or txt report. Thanks
+	  to Jehan Guillaume de Rorthais for the patch.
+	- Remove port from the session regex pattern to match all lines.
+	- Fix the progress bar. It was trying to use gunzip to get real file
+	  size for all formats (by default). Unbreak the bz2 format (that does
+	  not report real size) and add support for zip format. Thanks to Euler
+	  Taveira de Oliveira fort the patch.
+	- Fix some typos and grammatical issues. Thanks to Euler Taveira de
+	  Oliveira fort the patch.
+	- Improve SQL code highlighting and keywords detection merging change
+	  from pgFormatter project.
+	- Add support to hostname or ip address in the client detection. Thanks
+	  to stuntmunkee for the report.
+	- pgbadger will now only reports execute statement of the extended
+	  protocol (parse/bind/execute). Thanks to pierrestroh for the report.
+	- Fix numerous typos as well as formatting and grammatical issues.
+	  Thanks to Thom Brown for the patch.
+	- Add backward compatibility to obsolete --client command line option.
+	  If you were using the short option -c nothing is changed.
+	- Fix issue with --dbclient and %h in log_line_prefix. Thanks to Julien
+	  Rouhaud for the patch.
+	- Fix multiline progress bar output.
+	- Allow usage of a dash into database, user and application names when
+	  prefix is used. Thanks to Vipul for the report.
+	- Mouse over queries will now show in which database they are executed
+	  in the overviews (Slowest queries, Most frequent queries, etc. ).
+	  Thank to Dirk-Jan Bulsink for the feature request.
+	- Fix missing keys on %cur_info hash. Thanks to Marc Cousin for the
+	  report.
+	- Move opening file handle to log file into a dedicated function.
+	  Thanks to Marc Cousin for the patch.
+	- Replace Ctrl+M by printable \r. Thanks to Marc Cousin for the report.
+
+
+2012-11-13 - Version 2.2
+
+This release add some major features like tsung output, speed improvement with
+csvlog, report of shut down events, new command line options to generate report
+excluding some user(s), to build report based on select queries only, to specify
+regex of the queries that must only be included in the report and to remove
+comments from queries. Lot of bug fixes, please upgrade.
+
+	- Update PostgreSQL keywords list for 9.2
+	- Fix number of queries in progress bar with tsung output.
+	- Remove obsolete syslog-ng and temporary syslog-ll log format added to
+	  fix some syslog autodetection issues. There is now just one syslog
+	  format: syslog, differences between syslog formats are detected and
+	  the log parser is adaptive.
+	- Add comment about the check_incremental_position() method
+	- Fix reports with empty graphs when log files were not in chronological
+	  order.
+	- Add report of current total of queries and events parsed in progress
+	  bar. Thanks to Jehan-Guillaume de Rorthais for the patch.
+	- Force pgBadger to use an require the XS version of Text::CSV instead
+	  of the Pure Perl implementation. It is a good bit faster thanks to
+	  David Fetter for the patch. Note that using csvlog is still a bit
+	  slower than syslog or stderr log format.
+	- Fix several issue with tsung output.
+	- Add report of shut down events
+	- Add debug information on command line used to pipe compressed log
+	  file when -v is provide.
+	- Add -U | --exclude-user command line option to generate report
+	  excluded user. Thanks to Birta Levente for the feature request.
+	- Allow some options to be specified multiple time or be written as a
+	  coma separated list of value, here are these options: --dbname,
+	  --dbuser, --dbclient, --dbappname, --exclude_user.
+	- Add -S | --select-only option to build report only on select queries.
+	- Add first support to tsung output, see usage. Thanks to Guillaume
+	  Lelarge for the feature request.
+	- Add --include-query and --include-file to specify regex of the queries
+	  that must only be included in the report. Thanks to Marc Cousin for
+	  the feature request.
+	- Fix auto detection of log_duration and log_min_duration_statement
+	  format.
+	- Fix parser issue with Windows logs without timezone information.
+	  Thanks to Nicolas Thauvin for the report.
+	- Fix bug in %r = remote host and port log line prefix detection.
+	  Thanks to Hubert Depesz Lubaczewski for the report.
+	- Add -C | --nocomment option to remove comment like /* ... */ from
+	  queries. Thanks to Hubert Depesz Lubaczewski for the feature request.
+	- Fix escaping of log_line_prefix. Thanks to Hubert Depesz Lubaczewski
+	  for the patch.
+	- Fix wrong detection of update queries when a query has a object names
+	  containing update and set. Thanks to Vincent Laborie for the report.
+
+2012-10-10 - Version 2.1
+
+This release add a major feature by allowing any custom log_line_prefix to be
+used by pgBadger. With stderr output you at least need to log the timestamp (%t)
+the pid (%p) and the session/line number (%l). Support to log_duration instead
+of log_min_duration_statement to allow reports simply based on duration and
+count report without query detail and report. Lot of bug fixes, please upgrade
+asap.
+
+	- Add new --enable-log_min_duration option to force pgbadger to use lines
+	  generated by the log_min_duration_statement even if the log_duration
+	  format is autodetected. Useful if you use both but do not log all queries.
+	  Thanks to Vincent Laborie for the feature request.
+	- Add syslog-ng format to better handle syslog traces with notation like:
+	  [ID * local2.info]. It is autodetected but can be forced in the -f option
+	  with value set to: syslog-ng.
+	- Add --enable-log_duration command line option to force pgbadger to only
+	  use the log_duration trace even if log_min_duration_statement traces are
+	  autodetected.
+	- Fix display of empty hourly graph when no data were found.
+	- Remove query type report when log_duration is enabled.
+	- Fix a major bug in query with bind parameter. Thanks to Marc Cousin for
+	  the report.
+	- Fix detection of compressed log files and allow automatic detection
+	  and uncompress of .gz, .bz2 and .zip files.
+	- Add gunzip -l command to find the real size of a gzip compressed file.
+	- Fix log_duration only reports to not take care about query detail but
+	  just count and duration.
+	- Fix issue with compressed csvlog. Thanks to Philip Freeman for the
+	  report.
+	- Allow usage of log_duration instead of log_min_duration_statement to
+	  just collect statistics about the number of queries and their time.
+	  Thanks to Vincent Laborie for the feature request.
+	- Fix issue on syslog format and autodetect with additional info like:
+	  [ID * local2.info]. Thanks to kapsalar for the report.
+	- Removed unrecognized log line generated by deadlock_timeout.
+	- Add missing information about unsupported csv log input from stdin.
+	  It must be read from a file. Thank to Philip Freeman for the report.
+	- Fix issue #28: Illegal division by zero with log file without query
+	  and txt output. Thanks to rlowe for the report.
+	- Update documentation about the -N | --appname option.
+	- Rename --name option into --appname. Thanks to Guillaume Lellarge for
+	  the patch.
+	- Fix min/max value in xasis that was always represented 2 days by
+	  default. Thanks to Casey Allen Shobe for the report.
+	- Fix major bug when running pgbadger with the -e option. Thanks to
+	  Casey Allen Shobe for the report and the great help
+	- Change project url to http://dalibo.github.com/pgbadger/. Thanks to
+	  Damien Clochard for this new hosting.
+	- Fix lot of issues in CSV parser and force locale to be C. Thanks to
+	  Casey Allen Shobe for the reports.
+	- Improve speed with custom log_line_prefix.
+	- Merge pull request #26 from elementalvoid/helpdoc-fix
+	- Fixed help text for --exclude-file. Old help text indicated that the
+	  option name was --exclude_file which was incorrect.
+	- Remove the obsolete --regex-user and --regex-db options that was used
+	  to specify a search pattern in the log_line_prefix to find the user
+	  and db name. This is replaced by the --prefix option.
+	- Replace Time column report header by Hour.
+	- Fix another issue in log_line_prefix parser with stderr format
+	- Add a more complex example using log_line_prefix
+	- Fix log_line_prefix issue when using timepstamp with millisecond.
+	- Add support to use any custom log_line_prefix with new option -p or
+	  --prefix. See README for an example.
+	- Fix false autodetection of CSV format when log_statement is enable or
+	  in possible other cases. This was resulting in error: "FATAL: cannot
+	  use CSV". Thanks to Thomas Reiss for the report.
+	- Fix display of empty graph of connections per seconds
+	- Allow character : in log line prefix, it will no more break the log
+	  parsing. Thanks to John Rouillard for the report.
+	- Add report of configuration parameter changes into the errors report
+	  and change errors report by events report to handle important messages
+	  that are not errors.
+	- Allow pgbadger to recognize " autovacuum launcher" messages.
+
+2012-08-21 - version 2.0
+
+This major version adds some changes not backward compatible with previous
+versions. Options -p and -g are not more used as progress bar and graphs
+generation are enabled by default now.
+
+The obsolete -l option use to specify the log file to parse has been reused to
+specify an incremental file. Outside these changes and some bug fix there's
+also new features:
+
+    * Using an incremental file with -l option allow to parse multiple time a
+      single log file and to "seek" at the last line parsed during the previous
+      run. Useful if you have a log rotation not sync with your pgbadger run.
+      For exemple you can run somthing like this:
+
+	pgbadger `find /var/log/postgresql/ -name "postgresql*" -mtime -7 -type f` \
+	    -o report_`date +%F`.html -l /var/run/pgbadger/last_run.log
+
+    * All queries diplayed in the HTML report are now clickable to display or
+      hide a nice SQL query format. This is called SQL format beautifier.
+
+    * CSV log parser have been entirely rewritten to handle csv with multiline.
+
+Every one should upgrade.
+
+	- Change license from BSD like to PostgreSQL license. Request from
+	  Robert Treat.
+	- Fix wrong pointer on Connections per host menu. Reported by Jean-Paul
+	  Argudo.
+	- Small fix for sql formatting adding scrollbars. Patch by Julien
+	  Rouhaud.
+	- Add SQL format beautifier on SQL queries. When you will click on a
+	  query it will be beautified. Patch by Gilles Darold
+	- The progress bar is now enabled by default, the -p option has been
+	  removed.  Use -q | --quiet to disable it. Patch by Gilles Darold.
+	- Graphs are now generated by default for HTML output, option -g as
+	  been remove and option -G added to allow disabling graph generation.
+	  Request from Julien Rouhaud, patch by Gilles Darold.
+	- Remove option -g and -p to the documentation. Patch by Gilles Darold.
+	- Fix case sensitivity in command line options. Patch by Julien Rouhaud.
+	- Add -T|--title option to change report title. Patch by Yury Bushmelev.
+	- Add new option --exclude-file to exclude specific commands with regex
+	  stated in a file. This is a rewrite by Gilles Darold of the neoeahit
+	  (Vipul) patch.
+	- CSV log parser have been entirely rewritten to handle csv with multi
+	  line, it also adds approximative duration for csvlog. Reported by
+	  Ludhimila Kendrick, patch by Gilles Darold.
+	- Alphabetical reordering of options list in method usage() and
+	  documentation. Patch by Gilles Darold.
+	- Remove obsolete -l | --logfile command line option, the -l option
+	  will be reused to specify an incremental file. Patch by Gilles Darold.
+	- Add -l | --last-parsed options to allow incremental run of pgbadger.
+	  Patch by Gilles Darold.
+	- Replace call to timelocal_nocheck by timegm_nocheck, to convert date
+	  time into second from the epoch. This should fix timezone issue.
+	  Patch by Gilles Darold.
+	- Change regex on log parser to allow missing ending space in
+	  log_line_prefix. This seems a common mistake. Patch by Gilles Darold.
+	- print warning when an empty log file is found. Patch by Gilles Darold.
+	- Add perltidy rc file to format pgbadger Perl code. Patch from depesz.
+
+2012-07-15 - version 1.2
+
+This version adds some reports and fixes a major issue in log parser. Every one 
+should upgrade.
+
+	- Rewrite this changelog to be human readable.
+	- Add -v | --verbose to enable debug mode. It is now disable by default
+	- Add hourly report of checkpoint warning when checkpoints are occuring
+	  too frequently, it will display the hourly count and the average
+	  occuring time.
+	- Add new report that sums the messages by log types. The report shows
+	  the number of messages of each log type, and a percentage. It also
+	  displays a pie graph. Patch by Guillaume Lelarge.
+	- Add missing pie graph on locks by type report.
+	- Format pie mouse track to display values only.
+	- Fix graph download button id on new connection graph.
+	- Add trackFormatter to flotr2 line graphs to show current x/y values.
+	- Fix issue on per minute minimum value.
+	- Add a note about Windows Os and zcat as well as a more general note
+	  about using compressed log file in other format than gzip.
+	- Complete rewrite of the log parser to handle unordered log lines.
+	  Data are now stored by pid before and added to the global statistics
+	  at end. Error report now include full details, statements, contexts
+	  and hints when available. Deadlock are also fully reported with the
+	  concerned queries.
+	- Fix miss handling of multi lines queries on syslog.
+	- Add -a|--average option to configure the per minutes average interval
+	  for queries and connexions. If you want the average to be calculated
+	  each minutes instead of the 5 per default, use --average 1 or for the
+	  default --average 5. If you want average per hour set it to 60.
+	- Add hourly statistics of connections and sessions as well as a chart
+	  about the number of connection per second (5 minutes average).
+	- Allow OTHERS type of queries lower than 2% to be include in the sum of
+	  types < 2%.
+	- Add autodetection of syslog ident name if different than the default
+	  "postgres" and that there is just one ident name in the log.
+	- Remove syslog replacement of tabulation by #011 still visible when
+	  there was multiple tabulation.
+	- Fix autodetection of log format syslog with single-digit day number
+	  in date.
+	- Add ChangeLog to MANIFEST and change URI in html footer.
+	- Check pgBadger compatibility with Windows Oses. Run perfectly.
+
+
+2012-07-04 - version 1.1
+
+This release fixes lot of issues and adds several main features.
+
+    New feature:
+
+	- Add possibility to get log from stdin
+	- Change syslog parsing regex to allow log timestamp in log_line_prefix
+	  very often forgotten when log destination is changed from stderr to
+	  syslog.
+	- Add documentation for the -z | --zcat command line option.
+	- Allow `zcat` location to be specified via `--zcat` - David E. Wheeler
+	- Add --disable-session,--disable-connection and disable-checkpoint
+	  command line options to remove their respective reports from the
+	  output	
+	- Add --disable-query command line option to remove queries statistics
+	  from the output
+	- Add --disable-hourly command line option to remove hourly statistics
+	  from the output
+	- Add --disable-error command line option to remove error report from
+	  the output
+	- Add --exclude-query option to exclude types of queries by specifying
+	  a regex
+	- Set thousand separator and decimal separator to be locale dependant
+	- Add -w option to only report errors
+	- Add Makefile.PL and full POD documentation to the project
+	- Allow multiple log files from command line
+	- Add simple csvlog support - Alex Hunsaker
+	- Hourly report for temporary files and checkpoints have moved in a
+	  separate table.
+	- Add hourly connections and sessions statistics.
+	- Add a chart about the number of connections per seconds.
+
+    Bug fix:
+
+	- Add information about log format requirement (lc_message = 'C').
+	  Reported by Alain Benard.
+	- Fix for begin/end dates with single digit day using syslog. Patch by
+	  Joseph Marlin.
+	- Fix handle of syslog dates with single-digit day number. Patch by
+	  Denis Orlikhin.
+	- Fix many English syntax in error messages and documentation. Patch by
+	  Joseph Marlin.
+	- Fix non terminated TH html tag in checkpoint hourly table. Reported
+	  by Joseph Marlin.
+	- "Log file" section will now only report first and last log file parsed
+	- Fix empty output in hourly temporary file stats.
+	- Fix wrapping query that goes out of the table and makes the window
+	  scroll horizontally. Asked by Isaac Reuben.
+	- Fix code where != was replaced by $$CLASSSY0A$$!=$$CLASSSY0B$$ in the
+	  output. Reported by Isaac Reuben
+	- Fix and review text report output.
+	- Fix an issue in SQL code highligh replacement.
+	- Complete review of the HTML output. 
+	- Add .gitignore for swap files. Patch by Vincent Picavet
+	- Fix wrong variable for user and database filter. Patch by Vincent
+	  Picavet.
+	- Change default regexp for user and db to be able to detect both. Patch
+	  by Vincent Picavet.
+	- Fix false cur_date when using syslog and allow -b and -e options to
+	  work. Patch by Vincent Picavet.
+	- Fix some case where logs where not detected as PostgreSQL log lines.
+	- Added explanation for --begin and --end datetime setting. Patch by
+	  ragged.
+	- Added -v / --version. Patch by ragged.
+	- Fix usage information and presentation in README file.
+
+2012-05-04 - version to 1.0
+
+  First public release of pgBadger.
+
+    New feature:
+
+	- Add graph of ckeckpoint Wal files usage (added, removed, recycled).
+	- Add --image-format to allow the change of the default png image
+	  format to jpeg.
+	- Allow download of all pie graphics as images.
+ 	- Add --pie-limit to sum all data lower than this percentage limit to
+	  avoid label overlap.
+ 	- Allow download of graphics as PNG images.
+	- Replace GD::Graph by the Flotr2 javascript library to draw graphics.
+	  Patch by Guillaume Lelarge
+	- Add pie graphs for session, database, user and host. Add a --quiet
+	  option to remove debug output and --progress to show a progress bar
+	  during log parsing
+	- Add pie graph for Queries by type.
+	- Add graph for checkpoint write buffer per hours
+	- Allow log parsing without any log_line_prefix and extend it to be
+	  defined by the user. Custom log_line prefix can be parsed using user
+	  defined regex with command line option --regex-db and --regex-user.
+	  For exemple the default regex of pgbadger to parse user and db name
+	  from log_line_prefix can be written like this:
+		pgbadger -l mylogfile.log  --regex-user="user=([^,]*)," \
+			--regex-db="db=([^,]*)"
+	- Separe log_line_prefix from log level part in the parser to extend
+	  log_line_prefix parsing
+	- If there is just one argument, assume it is the logfile and use
+	  default value for all other parameters
+	- Add autodetection of log format (syslog or stderr) if none is given
+	  with option -f
+	- Add --outfile option to dump output to a file instead of stdout.
+	  Default filename is out.html or out.txt following the output format.
+	  To dump to stdout set filename to -
+	- Add --version command line option to show current pgbadger version.
+
+    Bug fix:
+
+	- Rearrange x and y axis
+	- Fix legend opacity on graphics
+	- Rearrange Overall stats view
+	- Add more "normalization" on errors messages
+	- Fix samples error with normalyzed error instead of real error message
+	- Fix an other average size of temporary file decimal limit
+	- Force quiet mode when --progress is used
+	- Fix per sessions graphs
+	- Fix sort order of days/hours into hours array
+	- Fix sort order of days into graphics
+	- Remove display of locks, sessions and connections statistics when none
+	  are available
+	- Fix display of empty column of checkpoint when no checkpoint was found
+	  in log file
+
