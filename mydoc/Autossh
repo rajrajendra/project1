@@ -1,0 +1,12 @@
+Auto ssh (keygen)
+
+
+cd ~
+
+cd .ssh
+
+ssh keygen -t rsa
+
+ssh-add -L
+
+ssh-copy-id user@host

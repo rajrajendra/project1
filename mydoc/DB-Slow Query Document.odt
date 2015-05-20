@@ -1,0 +1,86 @@
+﻿DB-Slow Query
+
+DB- Slow Query Dev Caaspp
+
+
+Clone the Code Slow-Queries and Pgbadger from here:
+
+Explain Tool for the slow-queries
+
+ ssh://git@stash.caltesting.org:2222/lt/slow-queries.git
+
+Pgbadger source and script from
+
+ ssh://git@stash.caltesting.org:2222/lt/pgbadger.git
+
+Create pgpass file in the home directory and give the path in sql.py file in slow-queries directory.
+Credentials to log in to the DataBase
+
+Example:
+
+open the terminal
+run the following commands:
+
+$ cd ~
+$ vi .pgpass
+
+enter the following lines in pgpass file and save it.
+
+#hostname:port:database:username:password
+localhost:*:caaspp-mt-dev:caaspp-mt-dev:XXXXXXXXXXXX
+
+$ chmod 600 .pgpass
+
+Get the username and password from server.xml in law-dev-02.caltesting.org and the path:
+ /projects/caaspp-mt-dev-app-01/conf/server.xml
+
+Edit sql.py file in the slow-queries directory which is going to generate Queries , Count and Cost.
+
+Edit 7,8,9,10 lines as
+
+DB_USERNAME='caaspp-mt-dev'
+DB_HOSTNAME='localhost'
+DB_NAME='caaspp-mt-dev'
+PGPASSFILE=HOME + '/.pgpass'
+
+SSH port forwarding for postgres on Dev Caaspp:
+Run the following commands
+
+ssh  -L 1111:db-05.dev.law.caltesting.org:5432   law-dev-02.caltesting.org
+
+(which is going to create the tunnel to the database db-05.dev.law.caltesting.org through law-dev-02.caltesting.org server connected to the database)
+
+psql -h localhost -p 1111   -U caaspp-mt-dev
+
+(loging in to the database with username caaspp-mt-dev)
+
+Steps to run:
+
+ ./pgbadger --prefix 
+(Will generat out.html and run.py files in pgbadger directory)
+
+PYTHONPATH=~/ python run.py > report2.txt
+
+Example:
+
+ ./pgbadger --prefix '%m %u@%d[%p] [%c-%l]' ~/caaspp-mt-prod_slow_queries_20150402 > run.py
+
+  PYTHONPATH=~/experiments/query-parser/ python run.py > report2.txt
+
+Go to slow-queries directory from the terminal, edit 'Makefile' file by giving path to run.py.
+Now run 'make' command that will run sql.py script and generate output to report.csv file in slow-queries directory with three separated rows as Queries,Count and Cost.
+   
+Cause of Slow-query
+
+Queries that take longer than expected to run may be caused by a variety of reasons. Slow-running queries may be due to performance problems in network or  in computer where SQL Server is running. Slow-running queries can also causes due to problems with physical database design.
+
+Reasons for slow-running queries
+
+Slow network communication (traffic).
+Insufficient memory in the server, or low memory for SQL Server.
+Lack of useful statistics
+Lack of useful indexes.
+Lack of useful indexed views.
+Lack of useful data striping.
+Lack of useful partitioning.
+
